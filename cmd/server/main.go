@@ -64,6 +64,11 @@ func main() {
 		log.Fatalf("Fatal: Web Dashboard initialization failed: %v", err)
 	}
 
+	if cfg.BasicAuthUser != "" && cfg.BasicAuthPass != "" {
+		handler.SetBasicAuth(cfg.BasicAuthUser, cfg.BasicAuthPass)
+		logger.Info("App", fmt.Sprintf("HTTP Basic Authentication enabled for user '%s'", cfg.BasicAuthUser))
+	}
+
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	srv := &http.Server{
 		Addr:              addr,

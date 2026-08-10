@@ -14,6 +14,8 @@ type Config struct {
 	DBPath           string `mapstructure:"DB_PATH"`
 	TelegramBotToken string `mapstructure:"TELEGRAM_BOT_TOKEN"`
 	TelegramChatID   string `mapstructure:"TELEGRAM_CHAT_ID"`
+	BasicAuthUser    string `mapstructure:"BASIC_AUTH_USER"`
+	BasicAuthPass    string `mapstructure:"BASIC_AUTH_PASS"`
 }
 
 // LoadConfig reads configuration from .env file or environment variables.

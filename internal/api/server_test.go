@@ -258,3 +258,37 @@ func TestServer_DeleteTarget(t *testing.T) {
 		t.Errorf("expected target to be deleted from DB, but count was %d", count)
 	}
 }
+
+func TestServer_BasicAuth(t *testing.T) {
+	server, _ := setupTestServer(t)
+	server.SetBasicAuth("admin", "secret123")
+
+	// 1. Request without Auth -> 401 Unauthorized
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 Unauthorized without auth headers, got %d", rec.Code)
+	}
+
+	// 2. Request with invalid credentials -> 401 Unauthorized
+	reqBad := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqBad.SetBasicAuth("admin", "wrongpass")
+	recBad := httptest.NewRecorder()
+	server.ServeHTTP(recBad, reqBad)
+
+	if recBad.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401 Unauthorized with bad password, got %d", recBad.Code)
+	}
+
+	// 3. Request with valid credentials -> 200 OK
+	reqGood := httptest.NewRequest(http.MethodGet, "/", nil)
+	reqGood.SetBasicAuth("admin", "secret123")
+	recGood := httptest.NewRecorder()
+	server.ServeHTTP(recGood, reqGood)
+
+	if recGood.Code != http.StatusOK {
+		t.Errorf("expected 200 OK with valid auth headers, got %d", recGood.Code)
+	}
+}

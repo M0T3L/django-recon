@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -25,6 +26,8 @@ type Server struct {
 	pipelineRegistry *pipeline.Registry
 	templates        map[string]*template.Template
 	router           *http.ServeMux
+	basicUser        string
+	basicPass        string
 }
 
 // NewServer constructs and initializes the HTTP Server.
@@ -44,6 +47,12 @@ func NewServer(db *gorm.DB, pool *worker.Pool, notif *notifier.Notifier, registr
 	s.setupRoutes()
 
 	return s, nil
+}
+
+// SetBasicAuth configures HTTP Basic Authentication credentials for the server.
+func (s *Server) SetBasicAuth(user, pass string) {
+	s.basicUser = user
+	s.basicPass = pass
 }
 
 // templateFuncs provides custom functions available in all templates.
@@ -111,8 +120,16 @@ func (s *Server) setupRoutes() {
 	s.router.Handle("GET /screenshots/", http.StripPrefix("/screenshots/", http.FileServer(screenshotFS)))
 }
 
-// ServeHTTP delegates request handling to the internal router.
+// ServeHTTP delegates request handling to the internal router with optional Basic Auth protection.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if s.basicUser != "" && s.basicPass != "" {
+		user, pass, ok := r.BasicAuth()
+		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(s.basicUser)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(s.basicPass)) != 1 {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Django Recon Dashboard"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+	}
 	s.router.ServeHTTP(w, r)
 }
 
