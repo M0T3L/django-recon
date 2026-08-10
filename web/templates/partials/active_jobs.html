@@ -1,0 +1,75 @@
+<div id="active-jobs-table" hx-get="/api/jobs/active" hx-trigger="every 3s" hx-swap="outerHTML">
+    <table class="w-full text-left text-xs text-mist-300">
+        <thead class="text-[10px] uppercase bg-[#090b0c]/80 text-mist-400 border-b border-white/10 font-mono sticky top-0 z-10">
+            <tr>
+                <th scope="col" class="py-2 px-3 font-semibold">ID</th>
+                <th scope="col" class="py-2 px-3 font-semibold">Target</th>
+                <th scope="col" class="py-2 px-3 font-semibold">Pipeline</th>
+                <th scope="col" class="py-2 px-3 font-semibold">Status</th>
+                <th scope="col" class="py-2 px-3 font-semibold">Started</th>
+                <th scope="col" class="py-2 px-3 font-semibold">Completed</th>
+                <th scope="col" class="py-2 px-3 font-semibold text-center w-16">Action</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5 font-sans">
+            {{range .Jobs}}
+            <tr class="hover:bg-white/[0.02] transition-colors">
+                <td class="py-2 px-3 font-mono text-white font-semibold">#{{.ID}}</td>
+                <td class="py-2 px-3 font-semibold text-white text-xs">{{if .Target}}{{.Target.Domain}}{{else}}ID: {{.TargetID}}{{end}}</td>
+                <td class="py-2 px-3">
+                    <span class="px-2 py-px text-[10px] font-mono rounded-full border {{if eq .PipelineType "pipeline_2"}}bg-white/10 text-white border-white/20{{else}}bg-white/5 text-mist-200 border-white/10{{end}}">
+                        {{if .PipelineType}}{{.PipelineType}}{{else}}pipeline_1{{end}}
+                    </span>
+                </td>
+                <td class="py-2 px-3 font-mono">
+                    {{if eq .Status "running"}}
+                    <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse">
+                        <i class="fa-solid fa-spinner fa-spin text-emerald-400"></i> Running
+                    </span>
+                    {{else if eq .Status "pending"}}
+                    <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <i class="fa-solid fa-clock text-amber-400"></i> Pending
+                    </span>
+                    {{else if eq .Status "completed"}}
+                    <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-semibold bg-white/10 text-white border border-white/20">
+                        <i class="fa-solid fa-check text-emerald-400"></i> Done
+                    </span>
+                    {{else if eq .Status "cancelled"}}
+                    <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        <i class="fa-solid fa-ban text-rose-400"></i> Cancelled
+                    </span>
+                    {{else if eq .Status "failed"}}
+                    <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                        <i class="fa-solid fa-xmark text-rose-400"></i> Failed
+                    </span>
+                    {{else}}
+                    <span class="px-2 py-px text-[10px] rounded-full bg-white/5 text-mist-400 border border-white/10 font-mono">{{.Status}}</span>
+                    {{end}}
+                </td>
+                <td class="py-2 px-3 text-[10px] text-mist-400 font-mono">
+                    {{if .StartedAt}}{{.StartedAt.Format "15:04:05"}}{{else}}-{{end}}
+                </td>
+                <td class="py-2 px-3 text-[10px] text-mist-400 font-mono">
+                    {{if .CompletedAt}}{{.CompletedAt.Format "15:04:05"}}{{else}}-{{end}}
+                </td>
+                <td class="py-2 px-3 text-center">
+                    {{if or (eq .Status "running") (eq .Status "pending")}}
+                    <button hx-post="/api/jobs/cancel?id={{.ID}}" hx-target="#active-jobs-table"
+                        class="px-2 py-0.5 rounded text-[10px] font-mono bg-rose-500/10 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 transition-colors flex items-center justify-center space-x-1 mx-auto"
+                        title="Cancel/Stop this scan job">
+                        <i class="fa-solid fa-stop text-[8px]"></i>
+                        <span>Stop</span>
+                    </button>
+                    {{else}}
+                    <span class="text-mist-600 text-[10px]">-</span>
+                    {{end}}
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7" class="py-4 text-center text-mist-500 italic text-xs">No scan jobs queued yet.</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>

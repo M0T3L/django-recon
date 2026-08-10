@@ -1,0 +1,90 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#090b0c]/85 backdrop-blur-md"
+     onclick="if(event.target === this) this.remove()">
+    <div class="relative max-w-3xl w-full bg-[#0e1114] border border-white/15 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-4 border-b border-white/10 bg-[#090b0c]">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-shield-triangle-exclamation text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-mono font-bold text-white flex items-center space-x-2">
+                        <span>{{.Finding.Title}}</span>
+                    </h3>
+                    <p class="text-xs text-mist-400">Security Vulnerability Details & Execution Log</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="this.closest('.fixed').remove()" class="text-mist-400 hover:text-white text-xs px-2.5 py-1.5 rounded-full hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Modal Body -->
+        <div class="p-5 overflow-y-auto space-y-4 custom-scrollbar font-sans">
+            <!-- Badges Row -->
+            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                <!-- Severity Badge -->
+                {{if eq .Finding.Severity "critical"}}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                    <i class="fa-solid fa-circle-exclamation"></i> CRITICAL SEVERITY
+                </span>
+                {{else if eq .Finding.Severity "high"}}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                    <i class="fa-solid fa-fire"></i> HIGH SEVERITY
+                </span>
+                {{else if eq .Finding.Severity "medium"}}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <i class="fa-solid fa-triangle-exclamation"></i> MEDIUM SEVERITY
+                </span>
+                {{else if eq .Finding.Severity "low"}}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    <i class="fa-solid fa-circle-info"></i> LOW SEVERITY
+                </span>
+                {{else}}
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/5 text-mist-300 border border-white/10">
+                    <i class="fa-solid fa-bug"></i> {{.Finding.Severity}}
+                </span>
+                {{end}}
+
+                <!-- Tool Name -->
+                <span class="px-3 py-1 rounded-full bg-white/5 text-mist-200 border border-white/10">
+                    <i class="fa-solid fa-terminal text-[10px] mr-1 text-mist-400"></i> {{.Finding.ToolName}}
+                </span>
+
+                <!-- Target Domain -->
+                <span class="px-3 py-1 rounded-full bg-white/5 text-white border border-white/10 font-bold">
+                    <i class="fa-solid fa-globe text-[10px] mr-1 text-mist-400"></i> {{if .Finding.Target}}{{.Finding.Target.Domain}}{{else}}ID: {{.Finding.TargetID}}{{end}}
+                </span>
+            </div>
+
+            <!-- Description Box -->
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-1.5">
+                <span class="text-[10px] uppercase tracking-wider font-semibold text-mist-400 block font-mono">Vulnerability Description</span>
+                <p class="text-xs text-mist-200 leading-relaxed">
+                    {{if .Finding.Description}}{{.Finding.Description}}{{else}}<span class="text-mist-500 italic">No description details recorded for this template match.</span>{{end}}
+                </p>
+            </div>
+
+            <!-- Raw Execution Log Output Box -->
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/10 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] uppercase tracking-wider font-semibold text-mist-400 font-mono flex items-center space-x-1.5">
+                        <i class="fa-solid fa-code text-mist-300"></i>
+                        <span>Raw Execution Output Log</span>
+                    </span>
+                </div>
+                <div class="p-3.5 bg-[#090b0c] border border-white/10 rounded-xl text-xs font-mono text-mist-200 whitespace-pre-wrap max-h-64 overflow-y-auto custom-scrollbar shadow-inner select-all">
+                    {{if .Finding.RawOutput}}{{.Finding.RawOutput}}{{else}}No raw output recorded for this finding.{{end}}
+                </div>
+            </div>
+
+            <!-- Footer Details -->
+            <div class="flex items-center justify-between text-xs text-mist-500 font-mono pt-2 border-t border-white/5">
+                <span>Discovered: <strong class="text-mist-200">{{.Finding.CreatedAt.Format "2006-01-02 15:04:05"}}</strong></span>
+                <span>Finding ID: <strong class="text-mist-200">#{{.Finding.ID}}</strong></span>
+            </div>
+        </div>
+    </div>
+</div>

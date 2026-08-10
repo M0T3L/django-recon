@@ -1,0 +1,90 @@
+{{define "content"}}
+<div class="h-full flex flex-col space-y-3">
+    <!-- Title row -->
+    <div class="shrink-0 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-shield-halved text-mist-300 text-sm"></i>
+            <h1 class="text-sm font-display font-bold text-white">Security Findings & Vulnerabilities</h1>
+            <span class="text-[10px] text-mist-400 font-mono">Nuclei scanner results</span>
+        </div>
+        <span class="text-[10px] text-mist-400 font-mono">Click any vulnerability to view full details</span>
+    </div>
+
+    <!-- Table — fills remaining viewport with internal scroll -->
+    <div class="flex-1 min-h-0 p-4 rounded-xl protocol-card overflow-auto custom-scrollbar">
+        <table class="w-full text-left text-xs text-mist-300">
+            <thead class="text-[10px] uppercase bg-[#090b0c]/80 text-mist-400 border-b border-white/10 font-mono sticky top-0 z-10">
+                <tr>
+                    <th scope="col" class="py-2 px-3 font-semibold">Severity</th>
+                    <th scope="col" class="py-2 px-3 font-semibold">Title / Vulnerability</th>
+                    <th scope="col" class="py-2 px-3 font-semibold">Target</th>
+                    <th scope="col" class="py-2 px-3 font-semibold">Tool</th>
+                    <th scope="col" class="py-2 px-3 font-semibold">Discovered</th>
+                    <th scope="col" class="py-2 px-3 font-semibold text-center w-24">Details</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 font-sans">
+                {{range .Findings}}
+                <tr hx-get="/api/findings/detail?id={{.ID}}" hx-target="#modal-container"
+                    class="hover:bg-white/[0.04] transition-colors cursor-pointer group">
+                    <td class="py-2 px-3 font-mono">
+                        {{if eq .Severity "critical"}}
+                        <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                            <i class="fa-solid fa-circle-exclamation"></i> CRIT
+                        </span>
+                        {{else if eq .Severity "high"}}
+                        <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                            <i class="fa-solid fa-fire"></i> HIGH
+                        </span>
+                        {{else if eq .Severity "medium"}}
+                        <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <i class="fa-solid fa-triangle-exclamation"></i> MED
+                        </span>
+                        {{else if eq .Severity "low"}}
+                        <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                            <i class="fa-solid fa-circle-info"></i> LOW
+                        </span>
+                        {{else}}
+                        <span class="inline-flex items-center gap-1 px-2 py-px rounded-full text-[10px] font-medium bg-white/5 text-mist-300 border border-white/10">
+                            <i class="fa-solid fa-bug text-mist-500"></i> {{.Severity}}
+                        </span>
+                        {{end}}
+                    </td>
+                    <td class="py-2 px-3 font-semibold text-white max-w-sm">
+                        <div class="text-xs group-hover:text-mist-100 flex items-center space-x-1.5">
+                            <span>{{.Title}}</span>
+                            <i class="fa-solid fa-circle-info text-[9px] text-mist-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        {{if .Description}}
+                        <div class="text-[10px] text-mist-400 font-normal truncate mt-0.5">{{.Description}}</div>
+                        {{end}}
+                    </td>
+                    <td class="py-2 px-3 font-mono text-[11px] text-white font-semibold">
+                        {{if .Target}}{{.Target.Domain}}{{else}}ID: {{.TargetID}}{{end}}
+                    </td>
+                    <td class="py-2 px-3 font-mono">
+                        <span class="px-1.5 py-px text-[10px] rounded-full bg-white/5 text-mist-200 border border-white/10">
+                            {{.ToolName}}
+                        </span>
+                    </td>
+                    <td class="py-2 px-3 text-[10px] text-mist-400 font-mono">
+                        {{.CreatedAt.Format "01-02 15:04"}}
+                    </td>
+                    <td class="py-2 px-3 text-center">
+                        <button hx-get="/api/findings/detail?id={{.ID}}" hx-target="#modal-container"
+                            onclick="event.stopPropagation()"
+                            class="px-2.5 py-1 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-white text-[10px] font-semibold transition-colors cursor-pointer mx-auto shadow-sm">
+                            <span>View</span>
+                        </button>
+                    </td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="6" class="py-8 text-center text-mist-500 italic text-xs">No security findings reported yet. Launch a scan to discover vulnerabilities.</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{end}}

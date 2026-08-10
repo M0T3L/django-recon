@@ -1,0 +1,64 @@
+{{define "content"}}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-white flex items-center space-x-2.5">
+                <i class="fa-solid fa-images text-rose-400"></i>
+                <span>Visual Triage & Screenshot Gallery</span>
+            </h1>
+            <p class="text-xs text-zinc-400 mt-0.5">High-resolution webpage screenshots. Click any asset card to view full technical metadata and inspect details.</p>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="p-5 rounded-2xl protocol-card space-y-4">
+        <div class="flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex-1 min-w-[240px] relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3 text-zinc-500 text-xs"></i>
+                <input type="text" name="search" placeholder="Search hostname (e.g. admin.target.com)..." value="{{.Search}}"
+                    hx-get="/api/gallery" hx-trigger="keyup changed delay:300ms, search" hx-target="#gallery-grid-container"
+                    hx-include="#gallery-filter-form"
+                    class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-950/80 border border-white/10 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-rose-500/60 focus:ring-1 focus:ring-rose-500/60 font-mono text-sm transition-all">
+            </div>
+
+            <div id="gallery-filter-form" class="flex flex-wrap gap-3 items-center">
+                <input type="hidden" name="page" value="1">
+
+                <div class="flex items-center space-x-2">
+                    <label class="text-xs text-zinc-400 font-medium whitespace-nowrap">Status:</label>
+                    <select name="status_code"
+                        hx-get="/api/gallery" hx-trigger="change" hx-target="#gallery-grid-container"
+                        hx-include="#gallery-filter-form, [name='search']"
+                        class="px-3.5 py-2 rounded-xl bg-zinc-950 border border-white/10 text-zinc-200 text-xs focus:outline-none focus:border-rose-500/60 font-mono">
+                        <option value="" {{if eq .StatusCode ""}}selected{{end}}>All Statuses</option>
+                        <option value="200" {{if eq .StatusCode "200"}}selected{{end}}>200 OK</option>
+                        <option value="301" {{if eq .StatusCode "301"}}selected{{end}}>301 Redirect</option>
+                        <option value="302" {{if eq .StatusCode "302"}}selected{{end}}>302 Redirect</option>
+                        <option value="403" {{if eq .StatusCode "403"}}selected{{end}}>403 Forbidden</option>
+                        <option value="404" {{if eq .StatusCode "404"}}selected{{end}}>404 Not Found</option>
+                        <option value="500" {{if eq .StatusCode "500"}}selected{{end}}>500 Server Error</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <label class="text-xs text-zinc-400 font-medium whitespace-nowrap">Target:</label>
+                    <select name="target_domain"
+                        hx-get="/api/gallery" hx-trigger="change" hx-target="#gallery-grid-container"
+                        hx-include="#gallery-filter-form, [name='search']"
+                        class="px-3.5 py-2 rounded-xl bg-zinc-950 border border-white/10 text-zinc-200 text-xs focus:outline-none focus:border-rose-500/60 font-mono max-w-[200px]">
+                        <option value="" {{if eq .TargetDomain ""}}selected{{end}}>All Targets</option>
+                        {{range .TargetDomains}}
+                        <option value="{{.}}" {{if eq $.TargetDomain .}}selected{{end}}>{{.}}</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gallery Grid Container -->
+    <div id="gallery-grid-container">
+        {{template "gallery_grid.html" .}}
+    </div>
+</div>
+{{end}}

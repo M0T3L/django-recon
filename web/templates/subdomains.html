@@ -1,0 +1,399 @@
+{{define "content"}}
+<div class="h-full flex flex-col space-y-3">
+    <!-- Top Control Bar Card (z-20 to allow dropdown popovers to float above table container) -->
+    <div class="shrink-0 p-3 rounded-xl protocol-card space-y-2.5 relative z-20">
+        <!-- Row 1: Title on left, Table/Grid Switcher on top right -->
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-network-wired text-mist-300 text-sm"></i>
+                <h1 class="text-sm font-display font-bold text-white">Subdomains & Visual Triage</h1>
+                <span class="text-[10px] font-mono text-mist-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">{{.TotalCount}} total</span>
+            </div>
+
+            <!-- View Mode Switcher (Top Right Corner) -->
+            <div class="flex items-center bg-[#090b0c] p-0.5 rounded-lg border border-white/10">
+                <button type="button" id="btn-view-table"
+                    hx-get="/api/subdomains?view_mode=table"
+                    hx-target="#subdomains-table-container"
+                    hx-include="#filter-form, [name='search'], [name='sort_by']"
+                    onclick="switchViewMode('table')"
+                    class="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all flex items-center space-x-1 {{if ne .ViewMode "grid"}}bg-white text-mist-950 font-semibold shadow-sm{{else}}text-mist-400 hover:text-white{{end}}">
+                    <i class="fa-solid fa-table-list text-[10px]"></i>
+                    <span>Table</span>
+                </button>
+                <button type="button" id="btn-view-grid"
+                    hx-get="/api/subdomains?view_mode=grid"
+                    hx-target="#subdomains-table-container"
+                    hx-include="#filter-form, [name='search'], [name='sort_by']"
+                    onclick="switchViewMode('grid')"
+                    class="px-2.5 py-1 rounded-md text-[11px] font-medium transition-all flex items-center space-x-1 {{if eq .ViewMode "grid"}}bg-white text-mist-950 font-semibold shadow-sm{{else}}text-mist-400 hover:text-white{{end}}">
+                    <i class="fa-solid fa-border-all text-[10px]"></i>
+                    <span>Grid</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Row 2: Search (Left aligned), Multi-Select Filter + Custom Sort (Right aligned) -->
+        <div class="flex items-center justify-between gap-3 pt-2 border-t border-white/5 relative">
+            <!-- Search (Left Aligned) -->
+            <div class="relative w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-mist-500 text-[10px]"></i>
+                <input type="text" name="search" placeholder="Search host / domain..." value="{{.Search}}"
+                    hx-get="/api/subdomains" hx-trigger="keyup changed delay:300ms, search" hx-target="#subdomains-table-container"
+                    hx-include="#filter-form, [name='sort_by']"
+                    class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-[#090b0c] border border-white/10 text-white placeholder-mist-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 font-mono text-xs transition-all">
+            </div>
+
+            <!-- Right Aligned Group: Multi-Select Filter Button + Custom Sort Dropdown -->
+            <div class="flex items-center space-x-2">
+                <!-- Multi-Select Filter Toggle Button -->
+                <div class="relative">
+                    <button type="button" id="btn-filter-toggle" onclick="toggleFilterMenu()"
+                        class="px-3 py-1.5 rounded-lg bg-[#090b0c] hover:bg-white/10 border border-white/10 text-mist-200 text-xs font-medium flex items-center space-x-1.5 transition-all">
+                        <i class="fa-solid fa-sliders text-mist-400 text-[10px]"></i>
+                        <span>Filters</span>
+                        {{if gt .ActiveFilterCount 0}}
+                        <span class="px-1.5 py-0.2 rounded-full bg-white text-mist-950 text-[10px] font-bold ml-1 shadow-sm">{{.ActiveFilterCount}}</span>
+                        {{end}}
+                        <i class="fa-solid fa-chevron-down text-[9px] text-mist-500 ml-0.5"></i>
+                    </button>
+
+                    <!-- Multi-Select Filter Popover Menu -->
+                    <div id="filter-dropdown-menu" class="hidden absolute right-0 top-full mt-2 z-50 p-4 bg-[#0e1114] border border-white/20 rounded-xl shadow-2xl space-y-3.5 w-80 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                        <div class="text-[10px] uppercase font-mono font-semibold text-mist-400 border-b border-white/10 pb-2 flex items-center justify-between">
+                            <span class="flex items-center space-x-1.5">
+                                <i class="fa-solid fa-filter text-mist-300"></i>
+                                <span>Multi-Select Filters</span>
+                            </span>
+                            <button type="button" onclick="clearAllFilters()" class="text-[10px] text-mist-400 hover:text-white hover:underline lowercase font-sans">Clear all</button>
+                        </div>
+
+                        <!-- Multi-Select Filter Form -->
+                        <form id="filter-form" class="space-y-3 font-mono text-xs">
+                            <input type="hidden" name="page" value="1">
+                            <input type="hidden" name="view_mode" id="view_mode_input" value="{{if .ViewMode}}{{.ViewMode}}{{else}}table{{end}}">
+                            <input type="hidden" name="sort_by" id="sort_by_input" value="{{if .SortBy}}{{.SortBy}}{{else}}info_desc{{end}}">
+
+                            <!-- Status Codes Section -->
+                            <div class="space-y-1.5">
+                                <span class="text-[10px] uppercase text-mist-500 font-semibold block">HTTP Status Code:</span>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="200" {{if .IsStatusCodeSelected "200"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-emerald-400 focus:ring-0">
+                                        <span class="text-emerald-400 font-semibold">200 OK</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="2xx" {{if .IsStatusCodeSelected "2xx"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-emerald-400 focus:ring-0">
+                                        <span>2xx Success</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="301" {{if .IsStatusCodeSelected "301"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-sky-400 focus:ring-0">
+                                        <span class="text-sky-400">301 Redirect</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="302" {{if .IsStatusCodeSelected "302"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-sky-400 focus:ring-0">
+                                        <span class="text-sky-400">302 Redirect</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="403" {{if .IsStatusCodeSelected "403"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-rose-400 focus:ring-0">
+                                        <span class="text-rose-400 font-semibold">403 Forbidden</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="404" {{if .IsStatusCodeSelected "404"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-amber-400 focus:ring-0">
+                                        <span class="text-amber-400 font-semibold">404 Not Found</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="500" {{if .IsStatusCodeSelected "500"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-purple-400 focus:ring-0">
+                                        <span class="text-purple-400">500 Error</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="status_code" value="none" {{if .IsStatusCodeSelected "none"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-mist-400 focus:ring-0">
+                                        <span>No Status</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Target Domain Section -->
+                            {{if .TargetDomains}}
+                            <div class="space-y-1.5 pt-2 border-t border-white/5">
+                                <span class="text-[10px] uppercase text-mist-500 font-semibold block">Target Domain:</span>
+                                <div class="space-y-1 max-h-32 overflow-y-auto custom-scrollbar pr-1">
+                                    {{range .TargetDomains}}
+                                    <div class="flex items-center justify-between px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 transition-colors text-[11px]">
+                                        <label class="flex items-center space-x-2 truncate cursor-pointer flex-1 min-w-0">
+                                            <input type="checkbox" name="target_domain" value="{{.}}" {{if $.IsTargetDomainSelected .}}checked{{end}}
+                                                hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                                class="rounded bg-black border-white/20 text-white focus:ring-0 shrink-0">
+                                            <span class="truncate" title="{{.}}">{{.}}</span>
+                                        </label>
+                                        <button type="button"
+                                            hx-delete="/api/targets?domain={{.}}" hx-target="#toast-container" hx-swap="beforeend"
+                                            onclick="event.stopPropagation(); if(confirm('Delete target domain {{.}} and all associated subdomains/findings?')) { this.closest('div').remove(); }"
+                                            class="text-mist-500 hover:text-rose-400 p-0.5 ml-1 transition-colors shrink-0" title="Delete target & assets">
+                                            <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                    {{end}}
+                                </div>
+                            </div>
+                            {{end}}
+
+                            <!-- Screenshot Filter Section -->
+                            <div class="space-y-1.5 pt-2 border-t border-white/5">
+                                <span class="text-[10px] uppercase text-mist-500 font-semibold block">Screenshot Preview:</span>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="has_screenshot" value="yes" {{if .IsHasScreenshotSelected "yes"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-white focus:ring-0">
+                                        <span>Has Screenshot</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="has_screenshot" value="no" {{if .IsHasScreenshotSelected "no"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-white focus:ring-0">
+                                        <span>No Screenshot</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Tech Stack Filter Section -->
+                            <div class="space-y-1.5 pt-2 border-t border-white/5">
+                                <span class="text-[10px] uppercase text-mist-500 font-semibold block">Detected Tech Stack:</span>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="has_tech" value="yes" {{if .IsHasTechSelected "yes"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-white focus:ring-0">
+                                        <span>Has Tech Stack</span>
+                                    </label>
+
+                                    <label class="flex items-center space-x-2 px-2.5 py-1 rounded-md bg-[#090b0c] border border-white/10 hover:border-white/20 cursor-pointer transition-colors text-[11px]">
+                                        <input type="checkbox" name="has_tech" value="no" {{if .IsHasTechSelected "no"}}checked{{end}}
+                                            hx-get="/api/subdomains" hx-trigger="change" hx-target="#subdomains-table-container" hx-include="#filter-form, [name='search'], [name='sort_by']"
+                                            class="rounded bg-black border-white/20 text-white focus:ring-0">
+                                        <span>No Tech Stack</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Custom Theme-Matching Sort Dropdown -->
+                <div class="relative">
+                    <button type="button" id="btn-sort-toggle" onclick="toggleSortMenu()"
+                        class="px-3 py-1.5 rounded-lg bg-[#090b0c] hover:bg-white/10 border border-white/10 text-mist-200 text-xs font-medium flex items-center space-x-1.5 transition-all">
+                        <i class="fa-solid fa-arrow-down-wide-short text-mist-400 text-[10px]"></i>
+                        <span id="sort-label-text">
+                            {{if eq .SortBy "katana_desc"}}Katana Endpoints ↓
+                            {{else if eq .SortBy "alpha_asc"}}A → Z
+                            {{else if eq .SortBy "alpha_desc"}}Z → A
+                            {{else if eq .SortBy "status_asc"}}Status Ascending
+                            {{else if eq .SortBy "status_desc"}}Status Descending
+                            {{else if eq .SortBy "newest"}}Newest First
+                            {{else if eq .SortBy "oldest"}}Oldest First
+                            {{else}}Tech Stack ↓{{end}}
+                        </span>
+                        <i class="fa-solid fa-chevron-down text-[9px] text-mist-500 ml-0.5"></i>
+                    </button>
+
+                    <!-- Sort Options Popover Menu (z-50) -->
+                    <div id="sort-dropdown-menu" class="hidden absolute right-0 top-full mt-2 z-50 p-1.5 bg-[#0e1114] border border-white/20 rounded-xl shadow-2xl space-y-1 min-w-[210px] font-mono text-xs">
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "info_desc"}'
+                            onclick="selectSortOption('info_desc', 'Tech Stack ↓')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "info_desc"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Tech Stack ↓</span>
+                            {{if eq .SortBy "info_desc"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "katana_desc"}'
+                            onclick="selectSortOption('katana_desc', 'Katana Endpoints ↓')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "katana_desc"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Katana Endpoints ↓</span>
+                            {{if eq .SortBy "katana_desc"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "alpha_asc"}'
+                            onclick="selectSortOption('alpha_asc', 'A → Z')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "alpha_asc"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>A → Z</span>
+                            {{if eq .SortBy "alpha_asc"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "alpha_desc"}'
+                            onclick="selectSortOption('alpha_desc', 'Z → A')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "alpha_desc"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Z → A</span>
+                            {{if eq .SortBy "alpha_desc"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "status_asc"}'
+                            onclick="selectSortOption('status_asc', 'Status Ascending')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "status_asc"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Status Ascending</span>
+                            {{if eq .SortBy "status_asc"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "status_desc"}'
+                            onclick="selectSortOption('status_desc', 'Status Descending')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "status_desc"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Status Descending</span>
+                            {{if eq .SortBy "status_desc"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "newest"}'
+                            onclick="selectSortOption('newest', 'Newest First')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "newest"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Newest First</span>
+                            {{if eq .SortBy "newest"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+
+                        <button type="button"
+                            hx-get="/api/subdomains" hx-trigger="click" hx-target="#subdomains-table-container"
+                            hx-include="#filter-form, [name='search']"
+                            hx-vals='{"sort_by": "oldest"}'
+                            onclick="selectSortOption('oldest', 'Oldest First')"
+                            class="w-full px-2.5 py-1.5 rounded-lg text-left transition-colors flex items-center justify-between {{if eq .SortBy "oldest"}}bg-white/15 text-white font-semibold{{else}}text-mist-300 hover:bg-white/5 hover:text-white{{end}}">
+                            <span>Oldest First</span>
+                            {{if eq .SortBy "oldest"}}<i class="fa-solid fa-check text-[10px] text-emerald-400"></i>{{end}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Table / Grid (z-10 relative) -->
+    <div class="flex-1 min-h-0 p-3 rounded-xl protocol-card flex flex-col overflow-hidden relative z-10">
+        {{if eq .ViewMode "grid"}}
+        {{template "gallery_grid.html" .}}
+        {{else}}
+        {{template "subdomains_table.html" .}}
+        {{end}}
+    </div>
+</div>
+
+<script>
+function toggleFilterMenu() {
+    const filterMenu = document.getElementById('filter-dropdown-menu');
+    const sortMenu = document.getElementById('sort-dropdown-menu');
+    if (sortMenu) sortMenu.classList.add('hidden');
+    if (filterMenu) filterMenu.classList.toggle('hidden');
+}
+
+function toggleSortMenu() {
+    const filterMenu = document.getElementById('filter-dropdown-menu');
+    const sortMenu = document.getElementById('sort-dropdown-menu');
+    if (filterMenu) filterMenu.classList.add('hidden');
+    if (sortMenu) sortMenu.classList.toggle('hidden');
+}
+
+function clearAllFilters() {
+    const form = document.getElementById('filter-form');
+    if (!form) return;
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+
+    htmx.ajax('GET', '/api/subdomains', {
+        target: '#subdomains-table-container',
+        include: '#filter-form, [name="search"], [name="sort_by"]'
+    });
+}
+
+function selectSortOption(value, label) {
+    const input = document.getElementById('sort_by_input');
+    if (input) input.value = value;
+    
+    const labelText = document.getElementById('sort-label-text');
+    if (labelText) labelText.innerText = label;
+    
+    const sortMenu = document.getElementById('sort-dropdown-menu');
+    if (sortMenu) sortMenu.classList.add('hidden');
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', function(e) {
+    const filterBtn = document.getElementById('btn-filter-toggle');
+    const filterMenu = document.getElementById('filter-dropdown-menu');
+    if (filterBtn && filterMenu && !filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+        filterMenu.classList.add('hidden');
+    }
+
+    const sortBtn = document.getElementById('btn-sort-toggle');
+    const sortMenu = document.getElementById('sort-dropdown-menu');
+    if (sortBtn && sortMenu && !sortBtn.contains(e.target) && !sortMenu.contains(e.target)) {
+        sortMenu.classList.add('hidden');
+    }
+});
+
+function switchViewMode(mode) {
+    const input = document.getElementById('view_mode_input');
+    if (input) input.value = mode;
+    
+    const tableBtn = document.getElementById('btn-view-table');
+    const gridBtn = document.getElementById('btn-view-grid');
+    if (!tableBtn || !gridBtn) return;
+    
+    const activeClasses = ['bg-white', 'text-mist-950', 'font-semibold', 'shadow-sm'];
+    const inactiveClasses = ['text-mist-400', 'hover:text-white'];
+
+    if (mode === 'grid') {
+        activeClasses.forEach(c => gridBtn.classList.add(c));
+        inactiveClasses.forEach(c => gridBtn.classList.remove(c));
+        activeClasses.forEach(c => tableBtn.classList.remove(c));
+        inactiveClasses.forEach(c => tableBtn.classList.add(c));
+    } else {
+        activeClasses.forEach(c => tableBtn.classList.add(c));
+        inactiveClasses.forEach(c => tableBtn.classList.remove(c));
+        activeClasses.forEach(c => gridBtn.classList.remove(c));
+        inactiveClasses.forEach(c => tableBtn.classList.add(c));
+    }
+}
+</script>
+{{end}}

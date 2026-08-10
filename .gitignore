@@ -1,0 +1,27 @@
+# Environment & Secrets
+.env
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+
+# Screenshots (generated runtime data)
+web/static/screenshots/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Go build
+/bin/
+/dist/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,9 @@
+<div class="px-4 py-3 rounded-full border shadow-2xl flex items-center justify-between space-x-3 transition-all duration-300 backdrop-blur-md {{if .Success}}bg-zinc-900/90 text-emerald-300 border-emerald-500/30 shadow-emerald-950/40{{else}}bg-zinc-900/90 text-rose-300 border-rose-500/30 shadow-rose-950/40{{end}}">
+    <div class="flex items-center space-x-2 text-xs font-semibold">
+        <span><i class="fa-solid {{if .Success}}fa-circle-check text-emerald-400{{else}}fa-triangle-exclamation text-rose-400{{end}}"></i></span>
+        <span>{{.Message}}</span>
+    </div>
+    <button onclick="this.parentElement.remove()" class="text-xs opacity-60 hover:opacity-100 px-1">
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+</div>

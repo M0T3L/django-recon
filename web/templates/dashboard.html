@@ -1,0 +1,107 @@
+{{define "content"}}
+<div class="h-full flex flex-col space-y-3">
+    <!-- Row 1: Stat Cards — compact single row -->
+    <div class="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Target Count -->
+        <div class="px-4 py-3 rounded-xl protocol-card flex items-center justify-between group hover:border-white/20 transition-all">
+            <div>
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-mist-400">Total Targets</p>
+                <p class="text-2xl font-extrabold text-white font-mono tracking-tight leading-tight">{{.TotalTargets}}</p>
+            </div>
+            <div class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white text-sm flex items-center justify-center">
+                <i class="fa-solid fa-crosshairs"></i>
+            </div>
+        </div>
+
+        <!-- Live Subdomains -->
+        <div class="px-4 py-3 rounded-xl protocol-card flex items-center justify-between group hover:border-white/20 transition-all">
+            <div>
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-mist-400">Live Hosts</p>
+                <p class="text-2xl font-extrabold text-white font-mono tracking-tight leading-tight">{{.LiveSubdomains}}</p>
+            </div>
+            <div class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white text-sm flex items-center justify-center">
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
+        </div>
+
+        <!-- Findings (Nuclei) -->
+        <div class="px-4 py-3 rounded-xl protocol-card flex items-center justify-between group hover:border-white/20 transition-all">
+            <div>
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-mist-400">Findings</p>
+                <p class="text-2xl font-extrabold text-white font-mono tracking-tight leading-tight">{{.TotalFindings}}</p>
+            </div>
+            <div class="w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white text-sm flex items-center justify-center">
+                <i class="fa-solid fa-shield-cat"></i>
+            </div>
+        </div>
+
+        <!-- Active Scans -->
+        <div class="px-4 py-3 rounded-xl protocol-card flex items-center justify-between group hover:border-white/20 transition-all">
+            <div>
+                <p class="text-[10px] uppercase tracking-wider font-semibold text-mist-400">Active</p>
+                <p class="text-2xl font-extrabold text-amber-400 font-mono tracking-tight leading-tight">{{.ActiveJobs}}</p>
+            </div>
+            <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm flex items-center justify-center">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 2: Launch Form + Scan Queue — side by side -->
+    <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-5 gap-3">
+        <!-- Left: Launch Form (2/5 width) -->
+        <div class="lg:col-span-2 p-4 rounded-xl protocol-card flex flex-col justify-between">
+            <div class="shrink-0">
+                <div class="flex items-center space-x-2 mb-1">
+                    <i class="fa-solid fa-bolt text-mist-300 text-sm"></i>
+                    <h2 class="text-sm font-display font-bold text-white">Launch Recon Target</h2>
+                </div>
+                <p class="text-[10px] text-mist-400 mb-3">Enter target domain(s) to initiate dual-pipeline automated recon.</p>
+            </div>
+
+            <form hx-post="/api/targets" hx-target="#toast-container" hx-swap="beforeend" class="flex-1 flex flex-col min-h-0 justify-between">
+                <div class="flex-1 flex flex-col min-h-0 mb-3">
+                    <label for="domains" class="block text-[10px] font-medium text-mist-300 mb-1.5 flex items-center space-x-1 shrink-0">
+                        <i class="fa-solid fa-globe text-mist-500 text-[10px]"></i>
+                        <span>Target Domains (one per line)</span>
+                    </label>
+                    <textarea id="domains" name="domains" required
+                        placeholder="example.com&#10;api.target.org"
+                        class="w-full flex-1 min-h-[90px] px-3.5 py-2.5 rounded-lg bg-[#090b0c] border border-white/10 text-white placeholder-mist-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 font-mono text-xs transition-all resize-none custom-scrollbar"></textarea>
+                </div>
+
+                <div class="shrink-0 pt-3 border-t border-white/5 flex items-center gap-2">
+                    <button type="submit" name="pipeline_type" value="pipeline_1"
+                        class="flex-1 px-3 py-2 rounded-full bg-white hover:bg-mist-200 text-mist-950 font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-sm">
+                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                        <span>Pipeline 1 (Fast)</span>
+                    </button>
+                    <button type="submit" name="pipeline_type" value="pipeline_2"
+                        class="flex-1 px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold text-xs border border-white/20 flex items-center justify-center space-x-1.5 transition-all">
+                        <i class="fa-solid fa-bolt text-[10px]"></i>
+                        <span>Pipeline 2 (Deep)</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right: Scan Queue (3/5 width) -->
+        <div class="lg:col-span-3 p-4 rounded-xl protocol-card flex flex-col min-h-0">
+            <div class="shrink-0 flex items-center justify-between mb-2">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-list-check text-mist-300 text-sm"></i>
+                    <h2 class="text-sm font-display font-bold text-white">Live Scan Queue & Activity</h2>
+                </div>
+                <span class="text-[10px] text-mist-400 font-mono flex items-center space-x-1 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                    <span class="w-1 h-1 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>3s refresh</span>
+                </span>
+            </div>
+
+            <div class="flex-1 min-h-0 overflow-auto custom-scrollbar">
+                {{template "active_jobs.html" .}}
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

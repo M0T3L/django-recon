@@ -1,0 +1,190 @@
+# configs/tools.yaml
+# Production-Grade 100-Domain Fleet Reconnaissance Architecture
+
+pipelines:
+  pipeline_1:
+    name: "Fast & High-Signal Recon (100-Domain Fleet Optimized)"
+    steps:
+      - name: "subdomain_enum"
+        tool: "subfinder"
+        args: ["-d", "{{target}}", "-oJ", "-silent"]
+        output_type: "json"
+        parser: "subfinder_parser"
+        timeout: "5m"
+
+      - name: "dns_verification"
+        tool: "dnsx"
+        args: ["-silent", "-a", "-aaaa", "-cname", "-resp", "-rcode", "noerror,nxdomain", "-json"]
+        input_from: "subdomain_enum"
+        output_type: "json"
+        parser: "dnsx_parser"
+        timeout: "5m"
+
+      - name: "port_scan"
+        tool: "naabu"
+        args: ["-p", "80,443,3389,8080,8443,8000,8888,9000,9443", "-top-ports", "100", "-exclude-cdn", "-rate", "1000", "-json", "-silent"]
+        input_from: "dns_verification"
+        output_type: "json"
+        parser: "naabu_parser"
+        timeout: "10m"
+
+      - name: "http_probing"
+        tool: "httpx"
+        args: [
+          "-json",
+          "-title",
+          "-tech-detect",
+          "-status-code",
+          "-content-length",
+          "-favicon",
+          "-hash", "sha256",
+          "-web-server",
+          "-follow-redirects",
+          "-silent"
+        ]
+        input_from: "port_scan"
+        output_type: "json"
+        parser: "httpx_parser"
+        timeout: "10m"
+
+      - name: "filtered_visual_triage"
+        tool: "httpx"
+        args: [
+          "-json",
+          "-ss",
+          "-srd", "web/static/screenshots/",
+          "-mc", "200,403,301,302",
+          "-timeout", "10",
+          "-st", "10",
+          "-sid", "2",
+          "-silent"
+        ]
+        input_from: "http_probing"
+        output_type: "json"
+        parser: "httpx_screenshot_parser"
+        timeout: "10m"
+
+      - name: "crawling"
+        tool: "katana"
+        args: [
+          "-j",
+          "-d", "3",
+          "-jc",
+          "-known-files", "robotstxt,sitemapxml",
+          "-crawl-duration", "10m",
+          "-max-response-size", "2097152",
+          "-silent"
+        ]
+        input_from: "http_probing"
+        output_type: "json"
+        parser: "katana_parser"
+        timeout: "10m"
+
+      - name: "vuln_scan"
+        tool: "nuclei"
+        args: [
+          "-jsonl",
+          "-severity", "info,low,medium,high,critical",
+          "-rate-limit", "150",
+          "-bulk-size", "25",
+          "-timeout", "10",
+          "-retries", "1",
+          "-silent"
+        ]
+        input_from: "port_scan"
+        output_type: "jsonl"
+        parser: "nuclei_parser"
+        timeout: "15m"
+
+  pipeline_2:
+    name: "Deep & Unconventional Recon (Deep Tech & Extended Port Space)"
+    steps:
+      - name: "subdomain_enum"
+        tool: "subfinder"
+        args: ["-d", "{{target}}", "-all", "-oJ", "-silent"]
+        output_type: "json"
+        parser: "subfinder_parser"
+        timeout: "10m"
+
+      - name: "dns_verification"
+        tool: "dnsx"
+        args: ["-silent", "-a", "-aaaa", "-cname", "-resp", "-rcode", "noerror,nxdomain", "-json"]
+        input_from: "subdomain_enum"
+        output_type: "json"
+        parser: "dnsx_parser"
+        timeout: "10m"
+
+      - name: "port_scan"
+        tool: "naabu"
+        args: ["-p", "80,443,3389,8080,8443,8000,8888,9000,9443", "-top-ports", "1000", "-exclude-cdn", "-rate", "1000", "-json", "-silent"]
+        input_from: "dns_verification"
+        output_type: "json"
+        parser: "naabu_parser"
+        timeout: "15m"
+
+      - name: "http_probing"
+        tool: "httpx"
+        args: [
+          "-json",
+          "-title",
+          "-tech-detect",
+          "-status-code",
+          "-content-length",
+          "-favicon",
+          "-hash", "sha256",
+          "-web-server",
+          "-follow-redirects",
+          "-silent"
+        ]
+        input_from: "port_scan"
+        output_type: "json"
+        parser: "httpx_parser"
+        timeout: "15m"
+
+      - name: "full_visual_triage"
+        tool: "httpx"
+        args: [
+          "-json",
+          "-ss",
+          "-srd", "web/static/screenshots/",
+          "-timeout", "10",
+          "-st", "10",
+          "-sid", "2",
+          "-silent"
+        ]
+        input_from: "http_probing"
+        output_type: "json"
+        parser: "httpx_screenshot_parser"
+        timeout: "15m"
+
+      - name: "crawling"
+        tool: "katana"
+        args: [
+          "-j",
+          "-d", "5",
+          "-jc",
+          "-known-files", "robotstxt,sitemapxml",
+          "-crawl-duration", "15m",
+          "-max-response-size", "4194304",
+          "-silent"
+        ]
+        input_from: "http_probing"
+        output_type: "json"
+        parser: "katana_parser"
+        timeout: "15m"
+
+      - name: "vuln_scan"
+        tool: "nuclei"
+        args: [
+          "-jsonl",
+          "-severity", "info,low,medium,high,critical",
+          "-rate-limit", "150",
+          "-bulk-size", "25",
+          "-timeout", "10",
+          "-retries", "1",
+          "-silent"
+        ]
+        input_from: "port_scan"
+        output_type: "jsonl"
+        parser: "nuclei_parser"
+        timeout: "20m"

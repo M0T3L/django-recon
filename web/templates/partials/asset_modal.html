@@ -1,0 +1,130 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#090b0c]/85 backdrop-blur-md"
+     onclick="if(event.target === this) this.remove()">
+    <div class="relative max-w-4xl w-full bg-[#0e1114] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-4 border-b border-white/10 bg-[#090b0c]">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-server text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-mono font-bold text-white flex items-center space-x-2">
+                        <span>{{.Subdomain.Host}}</span>
+                    </h3>
+                    <p class="text-xs text-mist-400">Asset Technical Metadata & Visual Inspection</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="http://{{.Subdomain.Host}}" target="_blank" rel="noopener noreferrer"
+                    class="px-3.5 py-1.5 rounded-full bg-white hover:bg-mist-200 text-mist-950 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-md">
+                    <span>Visit Host</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+                <button onclick="this.closest('.fixed').remove()" class="text-mist-400 hover:text-white text-xs px-2.5 py-1.5 rounded-full hover:bg-white/10 transition-colors">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Modal Body -->
+        <div class="p-6 overflow-y-auto space-y-6">
+            <!-- Full Screenshot Preview -->
+            <div class="relative bg-[#090b0c] border border-white/10 rounded-xl overflow-hidden flex justify-center p-2 shadow-inner min-h-[250px]">
+                <img src="{{.ScreenshotURL}}" alt="{{.Subdomain.Host}}" class="rounded-lg max-w-full object-contain max-h-[50vh] shadow-xl" />
+            </div>
+
+            <!-- Technical Metadata Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Host & IP Card -->
+                <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
+                    <span class="text-[11px] uppercase tracking-wider font-semibold text-mist-400 block">IP Address</span>
+                    <span class="font-mono text-sm font-semibold text-white block">{{if .Subdomain.IP}}{{.Subdomain.IP}}{{else}}<span class="text-mist-600">Unresolved</span>{{end}}</span>
+                </div>
+
+                <!-- HTTP Status Code -->
+                <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
+                    <span class="text-[11px] uppercase tracking-wider font-semibold text-mist-400 block">HTTP Response</span>
+                    <div>
+                        {{if eq .Subdomain.StatusCode 200}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">200 OK</span>
+                        {{else if eq .Subdomain.StatusCode 301}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">301 Redirect</span>
+                        {{else if eq .Subdomain.StatusCode 302}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">302 Redirect</span>
+                        {{else if eq .Subdomain.StatusCode 403}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">403 Forbidden</span>
+                        {{else if eq .Subdomain.StatusCode 404}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">404 Not Found</span>
+                        {{else if eq .Subdomain.StatusCode 500}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">500 Internal Error</span>
+                        {{else if gt .Subdomain.StatusCode 0}}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-white/5 text-mist-200 border border-white/10">{{.Subdomain.StatusCode}}</span>
+                        {{else}}
+                        <span class="text-xs text-mist-600">-</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Target Domain -->
+                <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
+                    <span class="text-[11px] uppercase tracking-wider font-semibold text-mist-400 block">Target Domain</span>
+                    <span class="font-mono text-sm font-semibold text-white block">
+                        {{if .Subdomain.Target}}{{.Subdomain.Target.Domain}}{{else}}ID: {{.Subdomain.TargetID}}{{end}}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Page Title -->
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
+                <span class="text-[11px] uppercase tracking-wider font-semibold text-mist-400 block">HTML Page Title</span>
+                <p class="text-xs text-white font-mono">
+                    {{if .Subdomain.Title}}{{.Subdomain.Title}}{{else}}<span class="text-mist-600 italic">No HTML title tag detected</span>{{end}}
+                </p>
+            </div>
+
+            <!-- Detected Technologies Stack -->
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2">
+                <span class="text-[11px] uppercase tracking-wider font-semibold text-mist-400 block">Detected Tech Stack</span>
+                <div class="flex flex-wrap gap-1.5">
+                    {{range .Subdomain.Technologies}}
+                    <span class="px-3 py-1 text-xs font-mono rounded-full bg-white/5 text-mist-200 border border-white/10">
+                        <i class="fa-solid fa-code text-[10px] mr-1"></i> {{.}}
+                    </span>
+                    {{else}}
+                    <span class="text-xs text-mist-600 italic">No technology signatures matched</span>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Katana Crawled Endpoints Section -->
+            <div class="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase tracking-wider font-semibold text-mist-400 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-spider text-white"></i>
+                        <span>Katana Crawled Endpoints ({{len .KatanaEndpoints}})</span>
+                    </span>
+                </div>
+                {{if .KatanaEndpoints}}
+                <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs custom-scrollbar">
+                    {{range .KatanaEndpoints}}
+                    <div class="px-3 py-1.5 rounded-lg bg-[#090b0c]/90 border border-white/5 text-mist-200 flex items-center justify-between group hover:border-white/20 transition-colors">
+                        <span class="truncate" title="{{.}}">{{.}}</span>
+                        <a href="{{.}}" target="_blank" rel="noopener noreferrer" class="text-mist-500 hover:text-white text-[10px] ml-2 shrink-0">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <p class="text-xs text-mist-600 italic">No Katana endpoints discovered yet for this target host.</p>
+                {{end}}
+            </div>
+
+            <!-- Content Length & Timestamps -->
+            <div class="flex items-center justify-between text-xs text-mist-500 font-mono pt-2 border-t border-white/5">
+                <span>Content Length: <strong class="text-mist-200">{{if gt .Subdomain.ContentLength 0}}{{.Subdomain.ContentLength}} bytes{{else}}-{{end}}</strong></span>
+                <span>Discovered: <strong class="text-mist-200">{{.Subdomain.CreatedAt.Format "2006-01-02 15:04:05"}}</strong></span>
+            </div>
+        </div>
+    </div>
+</div>
