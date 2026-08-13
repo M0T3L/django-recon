@@ -37,7 +37,8 @@ mkdir -p /opt
 cd /opt
 if [ -d "django-recon" ]; then
     cd django-recon
-    git pull || true
+    git fetch origin
+    git reset --hard origin/main
 else
     git clone https://github.com/M0T3L/django-uc.git django-recon
     cd django-recon
