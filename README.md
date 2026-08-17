@@ -1,4 +1,4 @@
-# ⚡ DJANGO RECON — Automated Attack Surface Management & Bug Bounty Fleet Engine
+# DJANGO RECON — Automated Attack Surface Management & Bug Bounty Fleet Engine
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
@@ -15,7 +15,7 @@
 
 ---
 
-## 📸 Dashboard Preview
+## Dashboard Preview
 
 <!-- SCREENSHOT PLACEHOLDER: Place your dashboard screenshot at assets/dashboard.png -->
 <p align="center">
@@ -24,26 +24,26 @@
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-- **🚀 Ultra-Fast Go Recon Engine**: Native Go backend orchestrating external CLI tools asynchronously with context timeouts, worker pools, and zero runtime bloat.
-- **🔄 End-to-End Chained Pipeline**: Multi-stage data passing where each step intelligently pipes deduplicated results into downstream tools (`subfinder` ➔ `dnsx` ➔ `naabu` ➔ `httpx` ➔ `katana` ➔ `nuclei`).
-- **🛡️ High-Signal Vulnerability Detection**: Tailored template tagging focused on actionable security issues (CVEs, misconfigurations, takeovers, sensitive disclosures, XSS, SQLi, SSRF) without noisy false positives.
-- **📊 Interactive Web Dashboard**:
+- **Ultra-Fast Go Recon Engine**: Native Go backend orchestrating external CLI tools asynchronously with context timeouts, worker pools, and zero runtime bloat.
+- **End-to-End Chained Pipeline**: Multi-stage data passing where each step intelligently pipes deduplicated results into downstream tools (`subfinder` ➔ `dnsx` ➔ `naabu` ➔ `httpx` ➔ `katana` ➔ `nuclei`).
+- **High-Signal Vulnerability Detection**: Tailored template tagging focused on actionable security issues (CVEs, misconfigurations, takeovers, sensitive disclosures, XSS, SQLi, SSRF) without noisy false positives.
+- **Interactive Web Dashboard**:
   - **Fleet Overview**: Real-time scan queue, progress tracking, target domain stats, and findings metrics.
   - **Subdomain Asset Explorer**: Filterable and sortable assets table with IP resolution, HTTP status codes, web server, technology badges, and live screenshot previews.
   - **Grouped Vulnerability Findings**: Unique template-based aggregation grouping recurring vulnerabilities across hundreds of targets into clean, inspectable view modals.
   - **Visual Triage Gallery**: Responsive grid view of all captured web page screenshots for rapid identification of login panels, admin dashboards, and exposed services.
-- **🔔 Telegram Event-Driven Alerts**: Real-time instant notifications for scan progress, new asset discoveries (`+X new subs`), and high/critical vulnerability detections.
-- **📦 Single Binary & Zero Complexity**: Packaged as a standalone Go binary with embedded SQLite WAL mode database—no heavy Redis or PostgreSQL dependencies required.
+- **Telegram Event-Driven Alerts**: Real-time instant notifications for scan progress, new asset discoveries (`+X new subs`), and high/critical vulnerability detections.
+- **Single Binary & Zero Complexity**: Packaged as a standalone Go binary with embedded SQLite WAL mode database—no heavy Redis or PostgreSQL dependencies required.
 
 ---
 
-## 🏗️ Recon Architecture & Pipeline
+## Recon Architecture & Pipeline
 
 ```mermaid
 flowchart TD
-    A([🎯 Target Domain]) --> B[1. Subdomain Discovery\nsubfinder]
+    A([Target Domain]) --> B[1. Subdomain Discovery\nsubfinder]
     B --> C[2. DNS Verification\ndnsx]
     C --> D[3. Port Scanning & Filtering\nnaabu]
     D --> E[4. HTTP Probing & Fingerprinting\nhttpx]
@@ -57,8 +57,8 @@ flowchart TD
     F --> J
     H --> J
     I --> J
-    J --> K[🖥️ Web Dashboard]
-    J --> L[📱 Telegram Bot]
+    J --> K[Web Dashboard]
+    J --> L[Telegram Bot]
 ```
 
 ### Pipeline Steps Overview
@@ -86,7 +86,7 @@ flowchart TD
 
 ---
 
-## 🚀 Quick Start (Automated One-Line Deploy)
+## Quick Start (Automated One-Line Deploy)
 
 For a fresh **Ubuntu / Debian** server, run the automated setup script to install dependencies, compile the binary, and start the systemd service:
 
@@ -102,7 +102,7 @@ chmod +x deploy.sh
 
 ---
 
-## 🔧 Manual Installation & Build
+## Manual Installation & Build
 
 ### 1. Prerequisites
 
@@ -167,7 +167,7 @@ Open your browser at `http://localhost:8080` (or `http://YOUR_SERVER_IP:8080`) a
 
 ---
 
-## ⚙️ Customizing the Pipeline (`configs/tools.yaml`)
+## Customizing the Pipeline (`configs/tools.yaml`)
 
 Pipeline arguments, timeouts, and inputs are defined cleanly in YAML. You can modify tool concurrency, timeouts, and template tags directly in `configs/tools.yaml`:
 
@@ -188,17 +188,17 @@ pipelines:
 
 ---
 
-## 📱 Telegram Notifications
+## Telegram Notifications
 
 Django Recon sends real-time updates directly to your Telegram chat or channel:
 
-- 🚀 **Scan Started**: Target domain, job ID, and selected pipeline.
-- 🚨 **Instant Vulnerability Alert**: Critical & High severity vulnerabilities dispatched immediately upon discovery.
-- ✅ **Scan Completed**: Duration, live asset count with delta discovery metrics (e.g. `+24 NEW 🆕`), and total findings.
+- **Scan Started**: Target domain, job ID, and selected pipeline.
+- **Instant Vulnerability Alert**: Critical & High severity vulnerabilities dispatched immediately upon discovery.
+- **Scan Completed**: Duration, live asset count with delta discovery metrics (e.g. `+24 NEW 🆕`), and total findings.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 django-recon/
@@ -226,7 +226,7 @@ django-recon/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/M0T3L/django-uc/issues).
 
@@ -238,10 +238,6 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ---
 
-## 📜 License
+## License
 
 Distributed under the **MIT License**. See `LICENSE` for more information.
-
-<p align="center">
-  Built with ❤️ for the security and bug bounty community.
-</p>
