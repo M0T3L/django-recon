@@ -76,7 +76,7 @@ flowchart TD
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend**: [Go (Golang)](https://go.dev/) (>= 1.22)
 - **Database**: [SQLite](https://www.sqlite.org/) with [GORM](https://gorm.io/) (WAL Mode enabled for high-concurrency read/writes)
