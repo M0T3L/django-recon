@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go Version" />
   <img src="https://img.shields.io/badge/SQLite-WAL_Mode-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
   <img src="https://img.shields.io/badge/ProjectDiscovery-Ecosystem-FF5722?style=for-the-badge" alt="ProjectDiscovery" />
-  <img src="https://img.shields.io/badge/License-MIT-green.style?style=for-the-badge" alt="License" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" />https://img.shields.io/badge/license-MIT-blue
 </p>
 
 <p align="center">
