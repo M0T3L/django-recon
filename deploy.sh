@@ -57,7 +57,7 @@ APP_ENV=production
 PORT=8080
 DB_PATH=/opt/django-recon/recon.db
 BASIC_AUTH_USER=admin
-BASIC_AUTH_PASS=3c95e49fe757
+BASIC_AUTH_PASS=admin
 EOF
 fi
 
@@ -90,7 +90,7 @@ echo "🎉 INSTALLATION COMPLETED SUCCESSFULLY!"
 echo "=================================================="
 echo "🌐 Web Dashboard  : http://188.132.234.82:8080"
 echo "👤 Basic Auth User: admin"
-echo "🔑 Basic Auth Pass: 3c95e49fe757"
+echo "🔑 Basic Auth Pass: admin"
 echo "--------------------------------------------------"
 echo "📊 Service status command: systemctl status django-recon"
 echo "📜 Live logs command     : journalctl -u django-recon -f"
